@@ -45,8 +45,6 @@ with st.sidebar:
     st.divider()
     placeholder = st.empty()
 if uploaded:
-    # file_bytes = uploaded.read()
-    # file_name  = uploaded.name
     for uploaded_file in uploaded:
         placeholder.empty()
         file_bytes = uploaded_file.read()
@@ -295,7 +293,7 @@ def load_bronze_data(invoice_id):
         return {} # Return empty dict on error
 
 # --- Streamlit App UI ---
-st.title("🛒 Instacart Invoice Reconciliation")
+st.title("🛒 Invoice Reconciliation")
 st.markdown(f"Connected as role: **{CURRENT_USER}**")
 
 # --- Section 0: Display Totals
@@ -376,7 +374,6 @@ if selected_invoice_id:
         st.session_state.processed_invoice_id = selected_invoice_id
     if st.session_state.cached_mismatch_summary is not None:
         st.subheader(f"{st.session_state.cached_mismatch_summary}")
-    #st.subheader(f"{mismatch_summary}")
     # Load data from Bronze layer
     bronze_data_dict = load_bronze_data(selected_invoice_id)
 
@@ -408,9 +405,6 @@ if selected_invoice_id:
                  st.session_state.edited_transact_items = edited_transact_items_df # Store edited data
             else:
                  st.info("No data found in TRANSACT_ITEMS for this invoice.")
-                 # Provide an empty editor if needed for adding completely new data
-                 # st.session_state.edited_transact_items = st.data_editor(pd.DataFrame(columns=['invoice_id', 'product_name', 'quantity', 'unit_price', 'total_price']), num_rows="dynamic", key="editor_transact_items_new")
-
 
             # --- Editable Transact Totals ---
             st.write("**Totals (Original DB):**")
@@ -442,9 +436,6 @@ if selected_invoice_id:
                 st.session_state.edited_transact_totals = edited_transact_totals_df # Store edited data
             else:
                 st.info("No data found in TRANSACT_TOTALS for this invoice.")
-                 # Provide an empty editor if needed
-                 # st.session_state.edited_transact_totals = st.data_editor(pd.DataFrame(columns=['invoice_id', 'invoice_date', 'subtotal', 'tax', 'total']), hide_index=True, key="editor_transact_totals_new")
-
 
         with col2:
             st.markdown("**Reference Data (Source: DOCAI_*)**")
@@ -478,7 +469,7 @@ if selected_invoice_id:
         if 'pdf_url' not in st.session_state:
             st.session_state['pdf_url'] = None
         with st.expander("Show Selected Invoice"):
-            # st.subheader("Associated Document")
+
             # --- PDF Display Logic ---
             if selected_invoice_id:
                     
@@ -575,12 +566,6 @@ if selected_invoice_id:
                     gold_items_df['REVIEWED_BY'] = CURRENT_USER
                     gold_items_df['REVIEWED_TIMESTAMP'] = current_ts
                     gold_items_df['NOTES'] = review_notes # Add notes
-                    ###
-                    # gold_items_df['LINE_INSTANCE_NUMBER'] = gold_items_df.sort_values(
-                    #     ['INVOICE_ID', 'PRODUCT_NAME', 'QUANTITY', 'UNIT_PRICE', 'TOTAL_PRICE']
-                    # ).groupby(
-                    #     ['INVOICE_ID', 'PRODUCT_NAME']
-                    # ).cumcount() + 1
 
                      # Convert Pandas DataFrame to Snowpark DataFrame for writing
                     snowpark_gold_items = session.create_dataframe(gold_items_df)
@@ -589,10 +574,8 @@ if selected_invoice_id:
                          snowpark_gold_items = snowpark_gold_items.with_column_renamed(col_name, col_name.upper())
 
                     # Write to Gold Items Table (Append Mode)
-                    # It's often better to delete existing corrected data for this invoice first
-                    # Or use MERGE INTO for more robust upsert logic
-                    st.write(f"Writing {len(snowpark_gold_items.collect())} rows to {GOLD_ITEMS_TABLE}...") # Use collect() carefully for large data
-                    # Example: Delete existing before insert (use with caution)
+                    st.write(f"Writing {len(snowpark_gold_items.collect())} rows to {GOLD_ITEMS_TABLE}...") 
+                    # Example: Delete existing before insert
                     session.sql(f"DELETE FROM {GOLD_ITEMS_TABLE} WHERE INVOICE_ID = '{selected_invoice_id}'").collect()
                     snowpark_gold_items.write.mode("append").save_as_table(GOLD_ITEMS_TABLE)
                     st.success(f"Successfully saved corrected items to {GOLD_ITEMS_TABLE}")
@@ -603,9 +586,7 @@ if selected_invoice_id:
                     gold_totals_df['INVOICE_ID'] = selected_invoice_id
                     gold_totals_df['REVIEWED_BY'] = CURRENT_USER
                     gold_totals_df['REVIEWED_TIMESTAMP'] = current_ts
-                    # Add original DOCAI values if needed
                     gold_totals_df['NOTES'] = review_notes
-                    #gold_totals_df['LINE_INSTANCE_NUMBER'] = ""
 
                     # Convert Pandas DataFrame to Snowpark DataFrame for writing
                     snowpark_gold_totals = session.create_dataframe(gold_totals_df)
