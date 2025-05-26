@@ -1,5 +1,3 @@
-# sfguide-document-ai-invoice-reconciliation
-
 # Document AI Integration with Snowflake  
 
 ## Overview  
@@ -21,4 +19,4 @@ This automated pipeline enhances efficiency, reduces manual workload, and ensure
 
 ## Step-By-Step Guide
 
-For prerequisites, environment setup, step-by-step guide and instructions, please refer to the [QuickStart Guide](To be published shortly).
+For prerequisites, environment setup, step-by-step guide and instructions, please refer to the [QuickStart Guide](https://quickstarts.snowflake.com/guide/doc-ai-invoice-reconciliation/index.html?index=..%2F..index#0).
